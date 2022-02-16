@@ -1,0 +1,26 @@
+system:
+  Dev: true
+  CCDFilePath: /etc/openvpn/ccd
+  DevCCDFilePath: /Users/randolph/goodjob/uvpn/ccd
+
+redis:
+  Addr: x.x.x.x:6379
+  Password: ""
+  DB: 5
+  PoolSize: 12000
+  DialTimeout: 60s
+  ReadTimeout: 500ms
+  WriteTimeout: 500ms
+
+ldapCfg:
+  ConnUrl:       ldap://192.168.x.x:389
+  BaseDn:        DC=x,DC=com
+  AdminAccount:  CN=Admin,CN=Users,DC=x,DC=com
+  Password:      xxxxxxxxxxxxx
+  SslEncryption: False
+  Timeout:       60
+
+rocketMQ:
+  Addr: 192.168.x.x
+  Port: 9876
+  TopicName: UVPN
