@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"github.com/apache/rocketmq-client-go/v2"
@@ -99,7 +100,7 @@ func HandleUVPN(msg *primitive.MessageExt) (err error) {
 	log.Info(fmt.Sprintf("[1]MQ消息: 主题[%s] 工单名[%s] 消息Id[%s] OffsetMsgId[%s] 存储时间[%s]",
 		msg.Topic, order.SpName, msg.MsgId, msg.OffsetMsgId,
 		time.Unix(msg.StoreTimestamp/1000, 0).Format("2006-01-02 15:04:05")))
-
+	fmt.Println("################################")
 	// 查询LDAP用户，如果有这个人，则取其sam名称
 	res, err := uuap.FetchUser(&uuap.LdapConns, &uuap.LdapAttributes{
 		Num:         order.Eid,
@@ -107,6 +108,14 @@ func HandleUVPN(msg *primitive.MessageExt) (err error) {
 	})
 	if err != nil {
 		return
+	}
+	// 如果查不到人
+	if res == nil {
+		log.Error("查无此人！", &uuap.LdapAttributes{
+			Num:         order.Eid,
+			DisplayName: order.DisplayName,
+		})
+		return errors.New("查无此人！")
 	}
 
 	// 如果ldap用户存在 但ccd文件不存在，则到redis取最新的VIP
@@ -117,7 +126,7 @@ func HandleUVPN(msg *primitive.MessageExt) (err error) {
 		ccdPath = conf.Conf.System.CCDFilePath
 	}
 	isUserCCDFileExist := utils.IsFileExist(ccdPath + "/" + res.GetAttributeValue("sAMAccountName"))
-	// 如果发现ccd文件不存在，则新建ccd文件并写入基础权限 加锁 TODO
+	// 如果发现ccd文件不存在，则新建ccd文件并写入基础权限 加锁
 	if !isUserCCDFileExist {
 		err = GenerateCCD4User(ccdPath + "/" + res.GetAttributeValue("sAMAccountName"))
 		if err != nil {
@@ -278,9 +287,9 @@ func main() {
 	//ScanUVPNUserCCD()
 
 	// 消费者
-	//Consumer()
+	Consumer()
 
-	ScanUVPNUserCCD()
+	//ScanUVPNUserCCD()
 	//err := GenerateCCD4User(conf.Conf.System.DevCCDFilePath + "/" + "test")
 	//if err != nil {
 	//	log.Error(err)
